@@ -1,28 +1,23 @@
-# Etapa 1: Construcción de la aplicación
-FROM node:18-alpine AS build
+FROM node:18-alpine
 
-# Creamos una carpeta de trabajo
 WORKDIR /app
 
-# Copiamos los archivos de dependencias y los instalamos
+# Copiamos e instalamos dependencias
 COPY package*.json .
 RUN npm install
 
-# Copiamos el resto del código al contenedor
+# Copiamos el resto del código
 COPY . .
 
-# Construimos la aplicación usando Vite (la carpeta de salida por defecto es dist/)
+# Construimos el proyecto
 RUN npm run build
 
-# Etapa 2: Servir la aplicación
-FROM nginx:alpine
+# Instalamos http-server (global)
+RUN npm install -g http-server
 
-# Copiamos los archivos estáticos generados en la etapa anterior
-COPY --from=build /app/dist /usr/share/nginx/html
-
-# Abrimos el puerto 80 (opcional para Cloud Run, pero útil si lo despliegas en otro servicio)
-
+# Exponemos el puerto que usaremos
 EXPOSE 8080
 
-# Arrancamos el servidor Nginx en primer plano
-CMD ["nginx", "-g", "daemon off;"]
+# Arrancamos http-server en el puerto 8080,
+# sirviendo la carpeta 'dist'.
+CMD ["sh", "-c", "cd dist && http-server -p 8080"]
