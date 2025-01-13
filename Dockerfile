@@ -1,23 +1,29 @@
-FROM node:18-alpine
+# ===============================
+# Etapa 1: Construcción
+# ===============================
+FROM node:18-alpine AS build
 
 WORKDIR /app
 
-# Copiamos e instalamos dependencias
 COPY package*.json .
 RUN npm install
 
-# Copiamos el resto del código
 COPY . .
-
-# Construimos el proyecto
 RUN npm run build
 
-# Instalamos http-server (global)
+# ===============================
+# Etapa 2: Servir con http-server
+# ===============================
+FROM node:18-alpine
+
+# Instalamos 'http-server' en la imagen final
 RUN npm install -g http-server
 
-# Exponemos el puerto que usaremos
+WORKDIR /app
+
+# # Copiamos la carpeta dist generada en la etapa anterior
+# COPY --from=build /dist ./dist
+
 EXPOSE 8080
 
-# Arrancamos http-server en el puerto 8080,
-# sirviendo la carpeta 'dist'.
-CMD ["sh", "-c", "cd dist && http-server -p 8080"]
+CMD ["http-server", "dist", "-p", "8080"]
